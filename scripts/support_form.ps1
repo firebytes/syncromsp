@@ -57,6 +57,11 @@ if ([System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorActi
     }
 
     if (Test-Path "$env:PUBLIC\Desktop\Request IT Support.lnk") {
+      Remove-Item -Path "$env:PUBLIC\Desktop\Request IT Support.lnk"
+  Write-Host Removing Old Shortcut
+    }
+
+    if (Test-Path "$env:PUBLIC\Desktop\Request Firebytes Support.lnk") {
 	Write-Host Shortcut Exists
     }
 
@@ -64,14 +69,14 @@ if ([System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorActi
     	Write-Host Creating shortcut
 
     	$Shell = New-Object -ComObject WScript.Shell
-    	$desktopShortcut = $Shell.CreateShortcut($env:PUBLIC + "\Desktop\Request IT Support.lnk")
+    	$desktopShortcut = $Shell.CreateShortcut($env:PUBLIC + "\Desktop\Request Firebytes Support.lnk")
     	$desktopShortcut.TargetPath = '%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe'
     	$desktopShortcut.Arguments = '-ExecutionPolicy Bypass -windowstyle hidden "Set-Variable -Name "subdomain" -Value "' + $subdomain + '' + '";' + $screenshotPath + '/support_form.ps1"'
     	$desktopShortcut.WorkingDirectory = "$screenshotPath"
     	$desktopShortcut.WindowStyle = 1
 	$desktopShortcut.Hotkey = "CTRL+SHIFT+Z"
     	$desktopShortcut.IconLocation = "$syncroFolderPath/Images/logo.ico, 0"
-    	$desktopShortcut.Description = "Request IT Support"
+    	$desktopShortcut.Description = "Request Firebytes Support"
     	$desktopShortcut.Save()
     }
 }
