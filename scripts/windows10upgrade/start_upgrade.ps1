@@ -1,7 +1,9 @@
 Import-Module $env:SyncroModule
 
-$FileURL="https://f001.backblazeb2.com/file/Firebytes-Public/dban-2.3.0_i586.iso"
-$FileOutput="C:\firebytes\Windows1809.iso"
+$subdomain = "firebytes"
+$TicketValue = Create-Syncro-Ticket -Subdomain $subdomain -Subject "Windows 10 Upgrade" -IssueType "Other" -Status "New"
+$FileURL="https://s3.wasabisys.com/firebytes-public/Windows1903.iso"
+$FileOutput="C:\firebytes\Windows1903.iso"
 
 function downloadFile($url, $targetFile)
 {
@@ -25,6 +27,8 @@ function downloadFile($url, $targetFile)
         $downloadedBytes = $downloadedBytes + $count
     }
     "Finished Download"
+    Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "File" -Body "Finished Download" -Hidden $True -DoNotEmail $True
+
     $targetStream.Flush()
     $targetStream.Close()
     $targetStream.Dispose()
@@ -34,8 +38,10 @@ function downloadFile($url, $targetFile)
 if (-not (Test-Path $FileOutput)) {
   downloadFile $FileURL $FileOutput
   Write-host "File downloaded"
+  Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "File" -Body "File Confirmed" -Hidden $True -DoNotEmail $True
 } else {
   write-host "File already exists"
+  Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "File" -Body "File already exists - do not download" -Hidden $True -DoNotEmail $True
 }
 
 
@@ -43,18 +49,21 @@ if (-not (Test-Path $FileOutput)) {
 if (Test-Path $FileOutput) {
   # EXTRACT SOMEHOW
   write-host "file exists"
+  Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "File" -Body "File already exists - go ahead" -Hidden $True -DoNotEmail $True
   write-host "mounting image"
+  Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Image" -Body "Mounting Image" -Hidden $True -DoNotEmail $True
   $Volume = Mount-DiskImage -ImagePath $FileOutput -passthru | Get-DiskImage | Get-Volume
   write-host $Volume.DriveLetter
 
     #Create batchfile for upgrade on each computer
   write-host "start check"
+  Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Install" -Body "Starting Check" -Hidden $True -DoNotEmail $True
   $SetupPath = "$($Volume.DriveLetter):\setup.exe"
   write-host $SetupPath
 
   $SetupProcess = Start-Process `
          -FilePath $SetupPath `
-         -ArgumentList "/auto Upgrade /quiet /Compat ScanOnly /DynamicUpdate disable" `
+         -ArgumentList "/auto Upgrade /quiet /Compat ScanOnly /DynamicUpdate enable" `
          -RedirectStandardError c:\firebytes\win_error.log `
          -RedirectStandardOutput c:\firebytes\win_output.log `
          -Passthru `
@@ -62,19 +71,20 @@ if (Test-Path $FileOutput) {
 
   Write-Host $SetupProcess.ExitCode
   if ($SetupProcess.ExitCode -ne -1047526896) {
-
+    Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body $SetupProcess.ExitCode -Hidden $True -DoNotEmail $True
     write-host "error Code: $($SetupProcess.ExitCode)"
     '{0:X}' -f $SetupProcess.ExitCode
     dismount-diskimage -ImagePath $FileOutput
     Exit 2
   } else {
     write-host "RUN SETUP NOW"
+    Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Install" -Body "Run Setup" -Hidden $True -DoNotEmail $True
 
-    $InstallProcess = Start-Process `
-           -FilePath $SetupPath `
-           -ArgumentList "/auto Upgrade /quiet /Compat IgnoreWarning /DynamicUpdate disable" `
-           -RedirectStandardError c:\firebytes\win_error.log `
-           -RedirectStandardOutput c:\firebytes\win_output.log
+    #$InstallProcess = Start-Process `
+    #       -FilePath $SetupPath `
+    #       -ArgumentList "/auto Upgrade /quiet /Compat IgnoreWarning /DynamicUpdate disable" `
+    #       -RedirectStandardError c:\firebytes\win_error.log `
+    #       -RedirectStandardOutput c:\firebytes\win_output.log
   }
 
 #CHECK RESULT???
