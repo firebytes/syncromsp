@@ -71,11 +71,27 @@ if (Test-Path $FileOutput) {
 
   Write-Host $SetupProcess.ExitCode
   if ($SetupProcess.ExitCode -ne -1047526896) {
-    Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body $SetupProcess.ExitCode -Hidden $True -DoNotEmail $True
+    switch ($SetupProcess.ExitCode) {
+      -104752904 {
+        Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body "0xC1900208 - Compatibility Issue" -Hidden $True -DoNotEmail $True
+      }
+      -104752908 {
+        Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body "0xC1900204 - Migration Choice not available" -Hidden $True -DoNotEmail $True
+      }
+      -104752912 {
+        Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body "0xC1900200 - Not eligible for Windows 10" -Hidden $True -DoNotEmail $True
+      }
+      -104752898 {
+        Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body "0xC190020E - Not enough free space" -Hidden $True -DoNotEmail $True
+      }
+      default {
+        Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Failed" -Body $SetupProcess.ExitCode -Hidden $True -DoNotEmail $True
+      }
+    }
     write-host "error Code: $($SetupProcess.ExitCode)"
     '{0:X}' -f $SetupProcess.ExitCode
     dismount-diskimage -ImagePath $FileOutput
-    Exit 2
+    Exit 1
   } else {
     write-host "RUN SETUP NOW"
     Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Install" -Body "Run Setup" -Hidden $True -DoNotEmail $True
