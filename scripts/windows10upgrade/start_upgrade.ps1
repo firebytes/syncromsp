@@ -43,7 +43,7 @@ if (Test-Path $FileOutput) {
   Create-Syncro-Ticket-Comment -Subdomain $subdomain -TicketIdOrNumber $TicketValue.ticket.id -Subject "Install" -Body "Starting Check" -Hidden $True -DoNotEmail $True
   $SetupPath = "$($Volume.DriveLetter):\setup.exe"
 
-  # IF SETUP PATH EXISTS
+  # IF SETUP PATH EXISTS - START UPGRADE CHECK
   if (Test-Path $SetupPath) {
 
     write-host $SetupPath
